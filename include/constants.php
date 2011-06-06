@@ -15,6 +15,5 @@ else
   define('EMAIL_PARAM','email');
   define('PASSWORD_PARAM','password');
 }
-$request_parameters = array('version','rand','type',EMAIL_PARAM,PASSWORD_PARAM);
 
 

@@ -15,6 +15,11 @@ if ( ! function_exists('json_encode') )
    }
 }
 
+function http_request_body()
+{
+   return file_get_contents('php://input');
+}
+
 function notification_start($conf)
 {
    if ( $conf['debug']=='true' )
@@ -88,7 +93,19 @@ function log_start($conf)
    }
 }
 
-function prepare_password($password,&$conf)
+function prepare_required_get_arguments($params)
+{
+   if ( $params->version=='0.9.0' )
+   {
+      return array('version','rand','type',EMAIL_PARAM,PASSWORD_PARAM);
+   }
+   else
+   {
+      return array('version','rand');
+   }
+}
+
+function prepare_password($password,$conf)
 {
    switch ($conf['PASSWORD_HASH'])
    {
@@ -104,6 +121,24 @@ function prepare_password($password,&$conf)
          break;
    }
    return $res;
+}
+
+function check_parameters_in_array($parameters,$array,&$result)
+{
+   foreach ( $parameters as $entry )
+   {
+      if (! array_key_exists($entry,$array))
+      {
+         $result['retval'] |= INVALID_REQUEST;
+         $result['alert_message'] = "Invalid request, not found '$entry'";
+         break;
+      }
+   }
+}
+
+function blur_password_before_log(&$password,$conf)
+{
+   $password = prepare_password($password,$conf);
 }
 
 function db_connect(&$conf, &$result)

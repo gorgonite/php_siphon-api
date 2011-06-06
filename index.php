@@ -6,40 +6,52 @@ require_once('include/functions.php');
 
 notification_start($conf);
 
-if (PASSWORD_PARAM=='password' && isset($_GET[PASSWORD_PARAM]))
-{
-   $_GET[PASSWORD_PARAM] = prepare_password($_GET[PASSWORD_PARAM],$conf);
-}
-$request_body = file_get_contents('php://input');
-
-// TODO: add password preparation if version >= 0.9.5 in the http request body
-
-log_start($conf);
+$request_body = http_request_body();
 
 $result = array ( 'retval' => 0 );
-foreach ( $request_parameters as $entry )
-{
-   if (! array_key_exists($entry,$_GET))
-   {
-      $result['retval'] |= INVALID_REQUEST;
-      $result['alert_message'] = "Invalid request, not found '$entry'";
-      break;
-   }
-}
+
+$params = new stdClass();
+$params->version = $_GET['version'];
+
+check_parameters_in_array(prepare_required_get_arguments($params),$_GET,$result);
 
 if ( $result['retval']==0 ):
 
-if ( $_GET['version']=='0.9.0' ):
+if ( strcmp($params->version,'0.9.5')>=0 )
+{
+   $json_body = json_decode($request_body);
+   check_parameters_in_array(array('type',PASSWORD_PARAM,EMAIL_PARAM),$json_body,$result);
+   if ( PASSWORD_PARAM=='password' && isset($json_body[PASSWORD_PARAM]) )
+   {
+      blur_password_before_log($json_body[PASSWORD_PARAM],$conf);
+	  $request_body = json_encode($json_body);
+   }
+   $params->type = $json_body['type'];
+   $params->password = $json_body[PASSWORD_PARAM];
+   $params->email = $json_body[EMAIL_PARAM];
+   $params->jsondata = json_encode($json_body['addons']);
+}
+else
+{
+   if ( PASSWORD_PARAM=='password' )
+   {
+      blur_password_before_log($_GET[PASSWORD_PARAM],$conf);
+   }
+   $params->type = $_GET['type'];
+   $params->password = $_GET[PASSWORD_PARAM];
+   $params->email = $_GET[EMAIL_PARAM];
+   $params->jsondata = $request_body;
+}
+
+log_start($conf);
+
+if ( $result['retval']==0 ):
 
 $db = db_connect($conf, $result);
 
 if ($db):  
 
-$params = new stdClass();
-$params->password = $_GET[PASSWORD_PARAM];
-$params->email = $_GET[EMAIL_PARAM];
-
-switch ($_GET['type'])
+switch ($params->type)
 {
    case 'signup':
       if ('ACCOUNT_CREATION_ENABLED'!='true')
@@ -68,7 +80,7 @@ switch ($_GET['type'])
       }
       break;
    case 'set':
-      if ( empty($request_body) )
+      if ( empty($params->jsondata) )
       {
          $result['status_message'] = 'No Update done';
          break;
@@ -76,7 +88,6 @@ switch ($_GET['type'])
          $result['alert_message'] = "Invalid request, not found 'addons'";
          break;
       }
-      $params->jsondata = $request_body;
       if ( set_request($params,$conf,$result) )
       {
          $result['status_message'] = 'Update data succeeded';
@@ -84,7 +95,7 @@ switch ($_GET['type'])
       break;
    default:
       $result['retval'] |= INVALID_REQUEST;
-      $result['alert_message'] = "Invalid request, '".$_GET['type']."' is not valid value for 'type'";
+      $result['alert_message'] = "Invalid request, '".$params->type."' is not valid value for 'type'";
       break;
 }
 
@@ -94,9 +105,9 @@ endif; // db
 
 else:
 
-$result['alert_message'] = "version " . $_GET['version'] . " is not managed currently.";
+$result['alert_message'] = "version " . $params->version . " is not managed currently.";
 
-endif; // version
+endif; // retval
 
 endif; // retval
 
