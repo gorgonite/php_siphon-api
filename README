@@ -16,7 +16,7 @@ No released tarball is available currently.
 Dependencies
 ===========
 
-php			>= 5.1
+php		>= 5.1
 mysql		>= 5.1
 PEAR-JSON	if json not provided by PHP
 
