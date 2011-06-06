@@ -1,0 +1,34 @@
+php_siphon-api -- A PHP Server providing Siphon API for Siphon Firefox addon
+
+Introduction
+===========
+Siphon addon for Firefox web browser enables to synchronize all addons on different computers.
+Only Siphon API 0.9.0 is currently managed.
+
+Source
+=====
+The source code is hosted at github:
+
+$ git clone git://github.com/gorgonite/php_siphon-api.git
+
+No released tarball is available currently.
+
+Dependencies
+===========
+
+php	       >= 5.1
+mysql	   >= 5.1
+PEAR-JSON   if json not provided by PHP
+
+Install
+======
+
+Configure the file ./include/conf.php
+Upload the files on your website repository
+Visit the URL ./install/index.php in order to initialize the database
+The PHP Server is installed
+
+Install the Siphon addon
+https://addons.mozilla.org/en-US/firefox/addon/siphon-add-on-synchronizer/
+
+Configure the server address with http://hostname/path/to/siphon/
