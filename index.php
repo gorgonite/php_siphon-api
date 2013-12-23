@@ -19,7 +19,7 @@ if ( $result['retval']==0 ):
 
 if ( strcmp($params->version,'0.9.5')>=0 )
 {
-   $json_body = json_decode($request_body);
+   $json_body = json_decode($request_body, true);
    check_parameters_in_array(array('type',PASSWORD_PARAM,EMAIL_PARAM),$json_body,$result);
    if ( PASSWORD_PARAM=='password' && isset($json_body[PASSWORD_PARAM]) )
    {
@@ -54,7 +54,7 @@ if ($db):
 switch ($params->type)
 {
    case 'signup':
-      if ('ACCOUNT_CREATION_ENABLED'!='true')
+      if ($conf['ACCOUNT_CREATION_ENABLED']!='true')
       {
          $result['retval'] |= CREATE_ACCOUNT_FORBIDDEN;
          $result['alert_message'] = 'Unable to create new user accounts';
